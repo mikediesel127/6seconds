@@ -1,0 +1,22 @@
+{
+  "name": "6seconds",
+  "version": "1.0.0",
+  "description": "Instant moments - addictive camera-first social app",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "start": "wrangler dev"
+  },
+  "keywords": [
+    "social",
+    "camera",
+    "real-time",
+    "cloudflare-workers"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
