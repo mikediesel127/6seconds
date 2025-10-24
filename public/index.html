@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>6seconds - instant moments</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading" class="screen active">
+        <div class="pulse">6s</div>
+        <p>connecting...</p>
+    </div>
+
+    <!-- Camera Capture Screen -->
+    <div id="capture" class="screen">
+        <div class="camera-container">
+            <video id="camera" autoplay playsinline></video>
+            <canvas id="canvas" style="display: none;"></canvas>
+
+            <!-- Quick Capture Button -->
+            <div class="capture-controls">
+                <button id="captureBtn" class="capture-btn">
+                    <div class="pulse-ring"></div>
+                    <span>SNAP</span>
+                </button>
+                <button id="flipCamera" class="icon-btn">↻</button>
+            </div>
+
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="live-count">
+                    <span class="live-dot"></span>
+                    <span id="liveCount">0</span> live
+                </div>
+                <button id="roomsBtn" class="icon-btn">🌐</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feed/Swipe Screen -->
+    <div id="feed" class="screen">
+        <div class="swipe-container" id="swipeContainer">
+            <!-- Cards populated dynamically -->
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <button id="goCapture" class="nav-btn active">📷</button>
+            <button id="goRooms" class="nav-btn">🎪</button>
+            <button id="goProfile" class="nav-btn">👤</button>
+        </div>
+    </div>
+
+    <!-- Rooms Screen -->
+    <div id="rooms" class="screen">
+        <div class="rooms-header">
+            <h2>Live Rooms</h2>
+            <button id="createRoom" class="create-btn">+ New Room</button>
+        </div>
+
+        <div id="roomsList" class="rooms-list">
+            <!-- Rooms populated dynamically -->
+        </div>
+
+        <!-- Active Room View -->
+        <div id="activeRoom" class="room-view" style="display: none;">
+            <div class="room-header">
+                <button id="leaveRoom" class="icon-btn">←</button>
+                <h3 id="roomName"></h3>
+                <span id="roomCount"></span>
+            </div>
+            <div id="roomFeed" class="room-feed">
+                <!-- Live feeds from room members -->
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn">📷</button>
+            <button class="nav-btn active">🎪</button>
+            <button class="nav-btn">👤</button>
+        </div>
+    </div>
+
+    <!-- Profile/Settings -->
+    <div id="profile" class="screen">
+        <div class="profile-header">
+            <h2>Your Moments</h2>
+            <input type="text" id="username" placeholder="Your name..." maxlength="20">
+        </div>
+
+        <div id="myMoments" class="moments-grid">
+            <!-- User's captured moments -->
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn">📷</button>
+            <button class="nav-btn">🎪</button>
+            <button class="nav-btn active">👤</button>
+        </div>
+    </div>
+
+    <script src="camera.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
