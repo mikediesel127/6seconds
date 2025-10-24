@@ -34,7 +34,7 @@ class App {
 
             if (cameraReady) {
                 this.switchScreen('capture');
-                this.connectWebSocket();
+                // this.connectWebSocket();
             } else {
                 alert('Camera required for 6seconds!');
             }
