@@ -1,6 +1,6 @@
 // 6seconds - Main App Logic
 
-const API_URL = 'YOUR_WORKER_URL'; // Update after deploying worker
+const API_URL = window.location.origin;
 
 class App {
     constructor() {
