@@ -29,14 +29,6 @@ export default {
             return handleFeed(request, env, corsHeaders);
         }
 
-        if (url.pathname === '/rooms') {
-            return handleRooms(request, env, corsHeaders);
-        }
-
-        if (url.pathname === '/rooms/create') {
-            return handleCreateRoom(request, env, corsHeaders);
-        }
-
         // Serve static files
         return serveStatic(url, env, corsHeaders);
     }
@@ -61,16 +53,7 @@ async function handleWebSocket(request, env) {
 
             switch (data.type) {
                 case 'init':
-                    // Store connection
                     await handleInit(server, data, env);
-                    break;
-
-                case 'join_room':
-                    await handleJoinRoom(server, data, env);
-                    break;
-
-                case 'leave_room':
-                    await handleLeaveRoom(server, data, env);
                     break;
 
                 default:
@@ -99,33 +82,6 @@ async function handleInit(ws, data, env) {
         type: 'live_count',
         count: liveCount
     }));
-}
-
-async function handleJoinRoom(ws, data, env) {
-    // Get Durable Object for room
-    const roomId = env.ROOMS.idFromName(data.roomId);
-    const room = env.ROOMS.get(roomId);
-
-    // Forward to room
-    await room.fetch('https://room/join', {
-        method: 'POST',
-        body: JSON.stringify({
-            userId: data.userId,
-            username: data.username
-        })
-    });
-}
-
-async function handleLeaveRoom(ws, data, env) {
-    const roomId = env.ROOMS.idFromName(data.roomId);
-    const room = env.ROOMS.get(roomId);
-
-    await room.fetch('https://room/leave', {
-        method: 'POST',
-        body: JSON.stringify({
-            userId: data.userId
-        })
-    });
 }
 
 // Upload handler
@@ -215,61 +171,6 @@ async function handleFeed(request, env, corsHeaders) {
     }
 }
 
-// Rooms handlers
-async function handleRooms(request, env, corsHeaders) {
-    try {
-        // Get all rooms from KV
-        const roomsKey = 'all_rooms';
-        let rooms = await env.MOMENTS.get(roomsKey);
-        rooms = rooms ? JSON.parse(rooms) : [];
-
-        return new Response(JSON.stringify(rooms), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-    } catch (error) {
-        console.error('Rooms error:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-    }
-}
-
-async function handleCreateRoom(request, env, corsHeaders) {
-    try {
-        const data = await request.json();
-        const roomId = `room_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-        const room = {
-            id: roomId,
-            name: data.name,
-            creator: data.userId,
-            creatorName: data.username,
-            created: Date.now(),
-            members: 0,
-            live: false
-        };
-
-        // Add to rooms list
-        const roomsKey = 'all_rooms';
-        let rooms = await env.MOMENTS.get(roomsKey);
-        rooms = rooms ? JSON.parse(rooms) : [];
-        rooms.unshift(room);
-        rooms = rooms.slice(0, 50); // Keep last 50 rooms
-        await env.MOMENTS.put(roomsKey, JSON.stringify(rooms));
-
-        return new Response(JSON.stringify(room), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-    } catch (error) {
-        console.error('Create room error:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-    }
-}
-
 // Serve static files
 async function serveStatic(url, env, corsHeaders) {
     try {
@@ -284,93 +185,5 @@ async function serveStatic(url, env, corsHeaders) {
 }
 
 async function getLiveCount(env) {
-    // Simplified - in production, track WebSocket connections
     return Math.floor(Math.random() * 100) + 10;
-}
-
-// Durable Object for rooms
-export class RoomDurableObject {
-    constructor(state, env) {
-        this.state = state;
-        this.env = env;
-        this.members = new Map();
-        this.connections = new Map();
-    }
-
-    async fetch(request) {
-        const url = new URL(request.url);
-
-        if (url.pathname === '/join') {
-            return this.handleJoin(request);
-        }
-
-        if (url.pathname === '/leave') {
-            return this.handleLeave(request);
-        }
-
-        if (url.pathname === '/ws') {
-            return this.handleWebSocket(request);
-        }
-
-        return new Response('Not found', { status: 404 });
-    }
-
-    async handleJoin(request) {
-        const data = await request.json();
-
-        this.members.set(data.userId, {
-            username: data.username,
-            joined: Date.now()
-        });
-
-        // Broadcast to all members
-        this.broadcast({
-            type: 'room_update',
-            members: this.members.size
-        });
-
-        return new Response(JSON.stringify({ success: true }));
-    }
-
-    async handleLeave(request) {
-        const data = await request.json();
-        this.members.delete(data.userId);
-
-        this.broadcast({
-            type: 'room_update',
-            members: this.members.size
-        });
-
-        return new Response(JSON.stringify({ success: true }));
-    }
-
-    async handleWebSocket(request) {
-        const webSocketPair = new WebSocketPair();
-        const [client, server] = Object.values(webSocketPair);
-
-        server.accept();
-
-        const connectionId = Math.random().toString(36).substr(2, 9);
-        this.connections.set(connectionId, server);
-
-        server.addEventListener('close', () => {
-            this.connections.delete(connectionId);
-        });
-
-        return new Response(null, {
-            status: 101,
-            webSocket: client,
-        });
-    }
-
-    broadcast(message) {
-        const msg = JSON.stringify(message);
-        this.connections.forEach(ws => {
-            try {
-                ws.send(msg);
-            } catch (error) {
-                console.error('Broadcast error:', error);
-            }
-        });
-    }
 }
