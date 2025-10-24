@@ -272,41 +272,15 @@ async function handleCreateRoom(request, env, corsHeaders) {
 
 // Serve static files
 async function serveStatic(url, env, corsHeaders) {
-    let path = url.pathname;
-
-    // Default to index.html
-    if (path === '/') {
-        path = '/index.html';
-    }
-
-    // Determine content type
-    const contentTypes = {
-        '.html': 'text/html',
-        '.css': 'text/css',
-        '.js': 'application/javascript',
-        '.json': 'application/json',
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.gif': 'image/gif',
-        '.svg': 'image/svg+xml',
-    };
-
-    const ext = path.substring(path.lastIndexOf('.'));
-    const contentType = contentTypes[ext] || 'application/octet-stream';
-
-    // Try to get file from R2 or serve directly
-    // For now, return a simple response directing to use wrangler dev
-    if (path === '/index.html') {
-        return new Response('Use wrangler dev to serve the app', {
-            headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+    try {
+        return await env.ASSETS.fetch(url);
+    } catch (error) {
+        console.error('Static file error:', error);
+        return new Response('Not found', {
+            status: 404,
+            headers: corsHeaders
         });
     }
-
-    return new Response('Not found', {
-        status: 404,
-        headers: corsHeaders
-    });
 }
 
 async function getLiveCount(env) {
